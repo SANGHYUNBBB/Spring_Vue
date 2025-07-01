@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--인터페이스 이름 (연결할 대상)-->
+<mapper namespace="org.scoula.member.mapper.MemberMapper">
+
+
+    <!-- Result Map -->
+    <!-- 권한 정보 매핑 -->
+    <resultMap id="authMap" type="AuthVO">
+        <result property="username" column="username"/>
+        <result property="auth" column="auth"/>
+    </resultMap>
+
+    <!-- 회원 정보 매핑 (권한 포함) -->
+    <resultMap id="memberMap" type="MemberVO">
+        <id property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="updateDate" column="update_date"/>
+        <collection property="authList" resultMap="authMap"/>
+    </resultMap>
+
+    <!-- SQL -->
+    <!-- 회원 정보 조회 (LEFT JOIN으로 권한 정보 포함) -->
+    <!--    id 옆에는 메서드 명 맞춰주고,
+    조회는 select, id는 어떤 메서드냐에 따라서 달라짐.
+     return을 바로 만들 수 없으니까 resultMap의 id와  select 쿼리의 resultMap을 맞춰줌.-->
+    <select id="get" resultMap="memberMap">
+        SELECT m.username, password, email, reg_date, update_date, auth
+        FROM tbl_member m
+                 LEFT OUTER JOIN tbl_member_auth a ON m.username = a.username
+        WHERE m.username = #{username}
+    </select>
+
+    <!-- ID 중복 체크용 조회 -->
+    <!--    -->
+    <select id="findByUsername" resultType="org.scoula.security.account.domain.MemberVO">
+        SELECT *
+        FROM tbl_member
+        WHERE username = #{username}
+    </select>
+
+    <!-- 회원 정보 저장 -->
+    <insert id="insert">
+        INSERT INTO tbl_member
+        VALUES (#{username}, #{password}, #{email}, now(), now())
+    </insert>
+    <!--    now는 현재 시점 체크하는거임.-->
+
+    <!-- 권한 정보 저장 -->
+    <insert id="insertAuth">
+        INSERT INTO tbl_member_auth(username, auth)
+        VALUES (#{username}, #{auth})
+    </insert>
+</mapper>
