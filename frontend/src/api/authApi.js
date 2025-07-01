@@ -1,5 +1,5 @@
 // 인증 관련된 api 호출
-import api from 'axios';
+import api from '@/api';
 
 const BASE_URL = '/api/member';
 const headers = { 'Content-Type': 'multipart/form-data' }; // 파일 업로드용 헤더
@@ -29,6 +29,27 @@ export default {
 
     const { data } = await api.post(BASE_URL, formData, headers);
     console.log('AUTH POST:', data);
+    return data;
+  },
+  // 회원 정보 수정 API
+  async update(member) {
+    // FormData로 multipart 인코딩
+    const formData = new FormData();
+    formData.append('username', member.username);
+    formData.append('password', member.password); // 검증용 현재 비밀번호
+    formData.append('email', member.email);
+
+    // 아바타 파일이 있는 경우에만 추가
+    if (member.avatar) {
+      formData.append('avatar', member.avatar);
+    }
+
+    const { data } = await api.put(
+      `${BASE_URL}/${member.username}`,
+      formData,
+      headers
+    );
+    console.log('AUTH PUT:', data);
     return data;
   },
 };

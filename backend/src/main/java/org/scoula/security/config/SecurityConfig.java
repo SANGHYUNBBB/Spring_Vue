@@ -88,7 +88,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // 접근 제한무시경로설정–resource
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/assets/**", "/*", "/api/member/**",
+        web.ignoring().antMatchers("/assets/**",
+                "/*",
+//                "/api/member/**",
                 // Swagger 관련url은보안에서제외
                 "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs"
         );
@@ -96,11 +98,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-//        http
-//                .addFilterBefore(encodingFilter(), CsrfFilter.class)
-//                .addFilterBefore(authenticationErrorFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(jwtUsernamePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         http
                 .addFilterBefore(encodingFilter(), CsrfFilter.class)  // 문자 인코딩 필터
@@ -120,45 +118,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedHandler(accessDeniedHandler);
 
         http
-                .authorizeRequests()
+                .authorizeRequests() // 경로별 접근 권한 설정
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
-                // 일단 모든 접근 허용
-                .anyRequest().permitAll();
-        
-        // 경로별 접근권한설정
-        // form-login기본 설정은 비활성화되어서 사라짐.
-        // 권한이 없으면 403에러 화면이 뜸.
-        // --> 이 에러화면보다는 로그인하는 페이지를 보여주는 것이 더 나을 것 같음.
-//        http.authorizeRequests()
-//                .antMatchers("/security/all").permitAll()
-//                .antMatchers("/security/admin").access("hasRole('ROLE_ADMIN')")
-//                .antMatchers("/security/member").access("hasAnyRole('ROLE_MEMBER', 'ROLE_ADMIN')");
 
-        //http.formLogin();//form-login화면 다시 활성화
-        //403에러가 발생했을 때 form-login화면으로 다시 redirect!
+                //.anyRequest().authenticated(); // 현재는 모든 접근 허용 (개발 단계) <
+                // 🌐 회원 관련 공개 API (인증 불필요)
+                .antMatchers(HttpMethod.GET, "/api/member/checkusername/**").permitAll()     // ID 중복 체크
+                .antMatchers(HttpMethod.POST, "/api/member").permitAll()                    // 회원가입
+                .antMatchers(HttpMethod.GET, "/api/member/*/avatar").permitAll()            // 아바타 이미지
 
-//        http
-//                .authorizeRequests() // 경로별 접근 권한 설정
-//                .antMatchers(HttpMethod.OPTIONS).permitAll()
-//                .antMatchers("/api/security/all").permitAll()        // 모두 허용
-//                .antMatchers("/api/security/member").access("hasRole('ROLE_MEMBER')")    // ROLE_MEMBER 이상 접근 허용
-//                .antMatchers("/api/security/admin").access("hasRole('ROLE_ADMIN')")      // ROLE_ADMIN 이상 접근 허용
-//                .anyRequest().authenticated();  // 나머지는 로그인 된 경우 모두 허용
+                // 🔒 회원 관련 인증 필요 API
+                .antMatchers(HttpMethod.PUT, "/api/member/**").authenticated() // 회원 정보 수정, 비밀번호 변경
 
-        http.formLogin()
-                .loginPage("/security/login")
-                .loginProcessingUrl("/security/login")
-                .defaultSuccessUrl("/");
-
-        http.logout()
-                .logoutUrl("/security/logout")
-                .invalidateHttpSession(true)
-                // 로그아웃설정시작
-                // POST: 로그아웃 호출 url
-                // 세션 invalidate
-                .deleteCookies("remember-me", "JSESSION-ID") // 삭제할 쿠키 목록
-                .logoutSuccessUrl("/security/logout");
-        // GET: 로그아웃 이후이동할페이지
+                .anyRequest().permitAll(); // 나머지 허용
     }
 
     @Override

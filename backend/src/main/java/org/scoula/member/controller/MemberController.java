@@ -2,11 +2,16 @@ package org.scoula.member.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.scoula.common.util.UploadFiles;
 import org.scoula.member.dto.MemberDTO;
 import org.scoula.member.dto.MemberJoinDTO;
+import org.scoula.member.dto.MemberUpdateDTO;
 import org.scoula.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 
 @Slf4j
 @RestController
@@ -32,5 +37,24 @@ public class MemberController {
         // 폼 데이터(formdata) 형태로 넘겨주려고 저렇게 하는 것임!!
         // 그래서 @RequestBody대신  @Modelattribute를 사용하는것임. 그리고 그것은 생략 가능!!!!!
         return ResponseEntity.ok(service.join(member));
+    }
+
+    // MemberController.java
+    @GetMapping("/{username}/avatar")
+    public void getAvatar(@PathVariable String username, HttpServletResponse response) {
+        String avatarPath = "c:/upload/avatar/" + username + ".png";
+        File file = new File(avatarPath);
+
+        if (!file.exists()) {
+            // 아바타가 없는 경우 기본 이미지 사용
+            file = new File("C:/upload/avatar/unknown.png");
+        }
+
+        UploadFiles.downloadImage(response, file);
+    }
+
+    @PutMapping("/{username}") // PUT 메서드 : 기존 리소스의 완전한 업데이트를 의미
+    public ResponseEntity<MemberDTO> changeProfile(MemberUpdateDTO member) {
+        return ResponseEntity.ok(service.update(member));
     }
 }

@@ -1,7 +1,6 @@
 <script setup>
 const props = defineProps({ username: String });
-
-const avatar = `/api/member/${props.username}/avatar`;
+const avatar = `/api/member/${props.username}/avatar`; // 동적 아바타 생성
 </script>
 
 <template>
